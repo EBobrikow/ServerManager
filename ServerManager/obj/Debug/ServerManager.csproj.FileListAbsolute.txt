@@ -1,0 +1,12 @@
+F:\SkillUpProjects\ServerManager\ServerManager\bin\Debug\ServerManager.exe.config
+F:\SkillUpProjects\ServerManager\ServerManager\bin\Debug\ServerManager.exe
+F:\SkillUpProjects\ServerManager\ServerManager\bin\Debug\ServerManager.pdb
+F:\SkillUpProjects\ServerManager\ServerManager\obj\Debug\ServerManager.csproj.AssemblyReference.cache
+F:\SkillUpProjects\ServerManager\ServerManager\obj\Debug\ServerManager.csproj.SuggestedBindingRedirects.cache
+F:\SkillUpProjects\ServerManager\ServerManager\obj\Debug\ServerManager.csproj.CoreCompileInputs.cache
+F:\SkillUpProjects\ServerManager\ServerManager\obj\Debug\ServerManager.csproj.CopyComplete
+F:\SkillUpProjects\ServerManager\ServerManager\obj\Debug\ServerManager.exe
+F:\SkillUpProjects\ServerManager\ServerManager\obj\Debug\ServerManager.pdb
+F:\SkillUpProjects\ServerManager\ServerManager\bin\Debug\Fleck.dll
+F:\SkillUpProjects\ServerManager\ServerManager\bin\Debug\Newtonsoft.Json.dll
+F:\SkillUpProjects\ServerManager\ServerManager\bin\Debug\Newtonsoft.Json.xml
