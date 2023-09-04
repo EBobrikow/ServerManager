@@ -15,44 +15,13 @@ namespace ServerManager
 {
     public class WorkerThread
     {
-        public enum ProcessStatus
-        { 
-            Running = 0,
-            Shutdown = 1
-        }
-
-        public enum MatchStatus
-        {
-            Entrance = 0,
-            Lobby = 1,
-            PickStage = 2,
-            Runing = 3,
-            Finished = 4
-        }
-
-        public struct ServerProcessInfo
-        {
-            public System.Diagnostics.Process process;
-            public ServerInfo serverInfo;
-            public ProcessStatus processStatus;
-        }
-
-        public struct ServerInfo
-        {
-            public int Id;
-            public string serverName;
-            public int port;
-            public string host;
-            public MatchStatus matchStatus;
-
-        }
-
-        private int serverId = 0;
+      
         public IWebSocketConnection socket;
         bool done;
         public string adress;
+        public string Ip;
         public int forbidenPort;
-        List<ServerProcessInfo> processList = new List<ServerProcessInfo>();
+        public Storage storageRef;
 
         public void Run()
         {
@@ -82,8 +51,10 @@ namespace ServerManager
 
         protected void OnClose()
         {
-            //done = true;
+            storageRef.Clients.Remove(socket);
+            
             Console.WriteLine("Connection closed \n");
+            done = true;
             //base.OnClose(e);
         }
 
@@ -109,25 +80,41 @@ namespace ServerManager
             {
                 if (message.ToString() == "ReqestServer")
                 {
-                    ServerProcessInfo servInfo = StartNewServer("Yahoo");
-                    string json = JsonConvert.SerializeObject(servInfo.serverInfo);
-                    SendResponce(json);
+                    string newServerName = "";
+                    if (jMsg.TryGetValue("ServerName", out var servname))
+                    {
+                        newServerName = servname.ToString();
+                    }
+                    RunNewServer(newServerName);
                     return;
+                }
+                else if (message.ToString() == "GetServersList")
+                {
+                    ReturnServersList();
                 }
               
             };
-            
+             
+        }
 
-            //List<ServerInfo> serverList = new List<ServerInfo>();
-            //for (int i = 0; i < processList.Count; i++)
-            //{
-            //    serverList.Add(processList[i].serverInfo);
-            //}
+        private void ReturnServersList()
+        {
+            List<ServerInfo> serverList = new List<ServerInfo>();
+            for (int i = 0; i < storageRef.processList.Count; i++)
+            {
+                serverList.Add(storageRef.processList[i].serverInfo);
+            }
+            string json = JsonConvert.SerializeObject(serverList);
+            SendResponce(json);
+            return;
+        }
 
-
-            //string tmp = JsonConvert.SerializeObject(serverList);
-
-            
+        private void RunNewServer(string serverName)
+        {
+            ServerProcessInfo servInfo = StartNewServer(serverName);
+            string json = JsonConvert.SerializeObject(servInfo.serverInfo);
+            SendResponce(json);
+            return;
         }
 
         private void SendResponce(string msg)
@@ -181,19 +168,19 @@ namespace ServerManager
                 port = GetAvailablePort(1001);
                 if (port != forbidenPort)
                 {
-                    if (processList.Count == 0)
+                    if (storageRef.processList.Count == 0)
                     {
                         properPort = true;
                         break;
                     }
-                    for (int i = 0; i < processList.Count; i++)
+                    for (int i = 0; i < storageRef.processList.Count; i++)
                     {
-                        if (processList[i].serverInfo.port == port)
+                        if (storageRef.processList[i].serverInfo.port == port)
                         {
                             break;
                         }
 
-                        if (i == processList.Count - 1)
+                        if (i == storageRef.processList.Count - 1)
                         {
                             properPort = true;
                         }
@@ -209,11 +196,11 @@ namespace ServerManager
             resInfo.process = process;
             resInfo.processStatus = ProcessStatus.Running;
             resInfo.serverInfo.port = port;
-            resInfo.serverInfo.host = adress;
+            resInfo.serverInfo.host = Ip;
             resInfo.serverInfo.serverName = servName;
-            resInfo.serverInfo.Id = ++serverId;
+            resInfo.serverInfo.Id = ++storageRef.serverId;
             resInfo.serverInfo.matchStatus = MatchStatus.Entrance;
-            processList.Add(resInfo);
+            storageRef.processList.Add(resInfo);
 
             return resInfo;
         }

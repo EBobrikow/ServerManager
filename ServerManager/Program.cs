@@ -11,64 +11,60 @@ using System.Threading;
 namespace ServerManager
 {
 
-    //public class Manager : WebSocketBehavior
-    //{
-    //    protected override void OnOpen()
-    //    {
-    //        Console.WriteLine("Open connection \n");
-    //        //base.OnOpen();
-    //        SendResponce("Connected");
-    //    }
+    public enum ProcessStatus
+    {
+        Running = 0,
+        Shutdown = 1
+    }
 
-    //    protected override void OnClose(CloseEventArgs e)
-    //    {
-    //        Console.WriteLine("Connection closed \n");
-    //        //base.OnClose(e);
-    //    }
+    public enum MatchStatus
+    {
+        Entrance = 0,
+        Lobby = 1,
+        PickStage = 2,
+        Runing = 3,
+        Finished = 4
+    }
 
-    //    protected override void OnError(ErrorEventArgs e)
-    //    {
-    //       // base.OnError(e);
-    //        Console.WriteLine("Error: \n" +  e.Message);
-    //    }
+    public struct ServerProcessInfo
+    {
+        public System.Diagnostics.Process process;
+        public ServerInfo serverInfo;
+        public ProcessStatus processStatus;
+    }
 
-    //    protected override void OnMessage(MessageEventArgs e)
-    //    {
-    //        //base.OnMessage(e);
-    //        ProcessMessage(e.Data);
-    //    }
+    public struct ServerInfo
+    {
+        public int Id;
+        public string serverName;
+        public int port;
+        public string host;
+        public MatchStatus matchStatus;
 
-
-    //    private void ProcessMessage(string msg)
-    //    {
-    //        Console.WriteLine("Message: \n" + msg);
-    //        SendResponce("Responde !!!!");
-    //    }
-
-    //    private void SendResponce(string msg)
-    //    {
-    //        Console.WriteLine("Responce to client: \n" + msg);
-    //        Send(msg);
-
-    //    }
-    //}
+    }
 
     internal class Program
     {
         static void Main(string[] args)
         {
             string adress = "ws://127.0.0.1";
+            string Ip = "127.0.0.1";
             int defaultPort = 3030;
-            WebSocketServer server = new WebSocketServer(adress + ":" + defaultPort);
 
+            Storage storage = new Storage();
+            WebSocketServer server = new WebSocketServer(adress + ":" + defaultPort);
+            
 
 
             server.Start(socket =>
             {
+                storage.Clients.Add(socket);
                 WorkerThread wt = new WorkerThread();
                 wt.socket = socket;
                 wt.adress = adress;
                 wt.forbidenPort = defaultPort;
+                wt.Ip = Ip;
+                wt.storageRef = storage;
                 Thread thrd = new Thread(new ThreadStart(wt.Run));
                 thrd.Start();
 
