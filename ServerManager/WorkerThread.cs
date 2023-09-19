@@ -15,7 +15,29 @@ namespace ServerManager
 {
     public class WorkerThread
     {
-      
+        //actions types
+        const string Action = "Action";
+        const string Update = "Update";
+
+        // functions name
+        const string ReqestServer = "ReqestServer";
+        const string GetServersList = "GetServersList";
+        const string ReqestServerInfoByPort = "ReqestServerInfoByPort";
+        const string HeartBeat = "HeartBeat";
+        const string StopServerByID = "StopServerByID";
+
+        //params name
+        const string ServerName = "ServerName";
+        const string ServerPort = "ServerPort";
+        const string ServerID = "ServerID";
+
+        const string MatchStatusVal = "MatchStatus";
+        const string MatchType = "MatchType";
+        const string MapName = "MapName";
+        const string CurrPlayers = "CurrPlayers";
+        const string MaxPlayers = "MaxPlayers";
+
+
         public IWebSocketConnection socket;
         bool done;
         public string adress;
@@ -38,13 +60,13 @@ namespace ServerManager
                 Thread.Sleep(100);
             }
 
-            Console.WriteLine("Socket closed");
+            storageRef.ConsoleWrite("Socket closed");
             socket.Close();
         }
 
         protected void OnOpen()
         {
-            Console.WriteLine("Open connection \n");
+            storageRef.ConsoleWrite("Open connection \n");
             //base.OnOpen();
             SendResponce("Connected");
         }
@@ -52,8 +74,8 @@ namespace ServerManager
         protected void OnClose()
         {
             storageRef.Clients.Remove(socket);
-            
-            Console.WriteLine("Connection closed \n");
+
+            storageRef.ConsoleWrite("Connection closed \n");
             done = true;
             //base.OnClose(e);
         }
@@ -61,7 +83,7 @@ namespace ServerManager
         protected void OnError(System.Exception e)
         {
             // base.OnError(e);
-            Console.WriteLine("Error: \n" + e.Message);
+            storageRef.ConsoleWrite("Error: \n" + e.Message);
         }
 
         protected void OnMessage(string msg)
@@ -73,37 +95,109 @@ namespace ServerManager
 
         private void ProcessMessage(string msg)
         {
-            Console.WriteLine("Message: \n" + msg);
+            //Console.WriteLine("Message: \n" + msg);
+            storageRef.ConsoleWrite("Message: \n" + msg);
 
             JObject jMsg = JObject.Parse(msg);
-            if (jMsg.TryGetValue("Action", out var message))
+            if (jMsg.TryGetValue(Action, out var message))
             {
-                if (message.ToString() == "ReqestServer")
+                if (message.ToString() == ReqestServer)
                 {
-                    string newServerName = "";
-                    if (jMsg.TryGetValue("ServerName", out var servname))
-                    {
-                        newServerName = servname.ToString();
-                    }
-                    RunNewServer(newServerName);
+                    StartNewServer(jMsg);
+
                     return;
                 }
-                else if (message.ToString() == "GetServersList")
+                else if (message.ToString() == GetServersList)
                 {
                     ReturnServersList();
                 }
-              
-            };
+                else if (message.ToString() == ReqestServerInfoByPort)
+                {
+                    GetServerInfoByPort(jMsg);
+                }
+                else if (message.ToString() == StopServerByID)
+                {
+                    StopServer(jMsg);
+                }
+
+            }
+            else if (jMsg.TryGetValue(Update, out var updMsessage))
+            {
+                if (updMsessage.ToString() == HeartBeat)
+                {
+                    HeartBeatUpdate(jMsg);
+                }
+            }
              
+        }
+
+        private void StopServer(JObject jMsg)
+        {
+            if (jMsg.TryGetValue(ServerID, out var matchStatus))
+            { 
+                int ID = Int32.Parse(matchStatus.ToString());
+                storageRef.CloseServer(ID);
+            }
+        }
+
+        private void HeartBeatUpdate(JObject jMsg)
+        {
+            ServerInfo info = new ServerInfo();
+            if (jMsg.TryGetValue(MatchStatusVal, out var matchStatus))
+            {
+                info.matchStatus = (MatchStatus)Int32.Parse(matchStatus.ToString());
+            }
+            if (jMsg.TryGetValue(MatchType, out var matchType))
+            {
+                info.matchType = matchType.ToString();
+            }
+            if (jMsg.TryGetValue(MapName, out var mapName))
+            {
+                info.mapName = mapName.ToString();
+            }
+            if (jMsg.TryGetValue(CurrPlayers, out var currPlayers))
+            {
+                info.currentPlayers = Int32.Parse(currPlayers.ToString());
+            }
+            if (jMsg.TryGetValue(MaxPlayers, out var maxPlayers))
+            {
+                info.maxPlayers = Int32.Parse(maxPlayers.ToString());
+            }
+            if (jMsg.TryGetValue(ServerID, out var servID))
+            {
+                info.Id = Int32.Parse(servID.ToString());
+            }
+
+            storageRef.UpdateServerInfo(info);
+            info = storageRef.GetServerInfoByID(info.Id);
+            string json = JsonConvert.SerializeObject(info);
+            SendResponce(json);
+        }
+
+        private void GetServerInfoByPort(JObject jMsg)
+        {
+            if (jMsg.TryGetValue(ServerPort, out var servport))
+            {
+                int port = Int32.Parse(servport.ToString());
+                ServerInfo info = storageRef.GetServerInfoByPort(port);
+                string json = JsonConvert.SerializeObject(info);
+                SendResponce(json);
+            }
+        }
+
+        private void StartNewServer(JObject jMsg)
+        {
+            string newServerName = "";
+            if (jMsg.TryGetValue(ServerName, out var servname))
+            {
+                newServerName = servname.ToString();
+            }
+            RunNewServer(newServerName);
         }
 
         private void ReturnServersList()
         {
-            List<ServerInfo> serverList = new List<ServerInfo>();
-            for (int i = 0; i < storageRef.processList.Count; i++)
-            {
-                serverList.Add(storageRef.processList[i].serverInfo);
-            }
+            List<ServerInfo> serverList = storageRef.GetServersList();
             string json = JsonConvert.SerializeObject(serverList);
             SendResponce(json);
             return;
@@ -119,7 +213,7 @@ namespace ServerManager
 
         private void SendResponce(string msg)
         {
-            Console.WriteLine("Responce to client: \n" + msg);
+            storageRef.ConsoleWrite("Responce to client: \n" + msg);
             socket.Send(msg);
 
         }

@@ -40,6 +40,10 @@ namespace ServerManager
         public int port;
         public string host;
         public MatchStatus matchStatus;
+        public string matchType;
+        public string mapName;
+        public int currentPlayers;
+        public int maxPlayers;
 
     }
 
