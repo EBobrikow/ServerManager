@@ -44,6 +44,7 @@ namespace ServerManager
         public string Ip;
         public int forbidenPort;
         public Storage storageRef;
+        public string UEServerExecuteblePath;
 
         public void Run()
         {
@@ -253,7 +254,7 @@ namespace ServerManager
             System.Diagnostics.Process process = new System.Diagnostics.Process();
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
             startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            startInfo.FileName = "F:\\SkillUpProjects\\RunCast\\win\\WindowsServer\\RunCastServer.exe";
+            startInfo.FileName = UEServerExecuteblePath;//"F:\\SkillUpProjects\\RunCast\\win\\WindowsServer\\RunCastServer.exe";
 
             bool properPort = false;
             int port = 0;
